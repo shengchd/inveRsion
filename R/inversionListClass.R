@@ -92,8 +92,15 @@ setMethod("getClassif","inversionList",
             if(missing(geno))
              geno<-TRUE
 
+            nchr<-length(object@results[[wROI]]@RR[[1]])
+            
             if(missing(id))
-             id<-paste("sub",1:length(object@results[[wROI]]@RR[[1]]),sep="")
+            {
+             id<-paste("sub",1:(nchr/2),sep="")
+            }
+
+            id<-rep(id,each=2)
+            
          
             RR<-object@results[[wROI]]@RR
 

@@ -628,7 +628,9 @@ setMethod("listInv","scan",
             LCsup<-ROI[2]
             nROI<-1
           }
-                   
+          
+          numbp<-1 
+          invList<-new("inversionList")                 
           for(bp in 1:nROI) 
           {
           
@@ -715,20 +717,21 @@ setMethod("listInv","scan",
               
               if(length(sb)==0)
               {    
-                warning("\n no pair of brakepoints selected")
+                warning("\n no pair of brakepoints selected for ROI:", bp,"\n")                
+                
               }else{
 
-              int<-(1:length(RR))[sb]
+                int<-(1:length(RR))[sb]
 
-              r1<-sapply(1:length(RR[[1]]), function(y) mean(sapply(int,function(x) RR[[x]][y]<0.5)))              
+                r1<-sapply(1:length(RR[[1]]), function(y) mean(sapply(int,function(x) RR[[x]][y]<0.5)))              
                   
-              LB<-c(min(LB),max(LB))
-              names(LB)<-c("min","max")
+                LB<-c(min(LB),max(LB))
+                names(LB)<-c("min","max")
               
-              RB<-c(min(RB),max(RB))
-              names(RB)<-c("min","max")
+                RB<-c(min(RB),max(RB))
+                names(RB)<-c("min","max")
                              
-              results[[bp]]<- new("inversion", 
+                results[[numbp]]<- new("inversion", 
               	    classification=r1,
                     leftBP=invResults[[1]][sb],
                     rightBP=invResults[[2]][sb],
@@ -738,11 +741,13 @@ setMethod("listInv","scan",
                     invFreq=mean(r1>0.5),
                     RR=lapply(int, function(x) RR[[x]])
                     )
+                    
+                numbp<-numbp+1
+
               }
         }
        
-       invList<-new("inversionList",
-                results=results)
+       invList<-new("inversionList",results=results)
        
        if(saveRes)
          save(invList,file="invList.RData")                         

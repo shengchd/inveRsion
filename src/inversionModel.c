@@ -91,7 +91,7 @@ void newFreq(double *AA, double *Resp, double *block, double *lev, int *nlev, in
    }
 
   /*register max freq*/
-  maxfreq==-1.0;
+  maxfreq=-1.0;
   inx=0; 
   for (level=0; level<*nlev; ++level) 
   {
@@ -479,7 +479,7 @@ void inversionModel(double *dat, int *maxSteps, int *nr, double *outLike, double
 
 
 /*
-dyn.load("inversionModel1.so")
+dyn.load("inversionModel.so")
 
 load(file="testInversionModel.Rdata")
 out<-.C("inversionModel", as.double(unlist(dat)), as.integer(maxSteps), as.integer(nr),as.double(rep(0,2)), as.double(rep(0,nr)))
