@@ -1,7 +1,7 @@
 Package: inveRsion
 Type: Package
 Title: Inversions in genotype data
-Version: 0.99.1
+Version: 1.0.0
 Date: 2010-11-10
 Author: Alejandro Caceres
 Maintainer: Alejandro Caceres <acaceres@creal.cat>
