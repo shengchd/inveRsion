@@ -8,7 +8,7 @@ The function labels the haplotypes of size \code{blockSize} around each candidat
 
 }
 \usage{
-codeHaplo(objectGenoDat, blockSize, minAllele, saveRes = TRUE, file = NULL, ROI)
+codeHaplo(objectGenoDat, blockSize, minAllele, saveRes = TRUE, file = NULL, ROI,intSNP=FALSE,phasing="inversion&BP")
 }
 
 \arguments{
@@ -18,8 +18,10 @@ codeHaplo(objectGenoDat, blockSize, minAllele, saveRes = TRUE, file = NULL, ROI)
   \item{saveRes}{
 \code{logical}. Whether results should be saved in file \code{hapCode.RData}}
   \item{file}{\code{character}. File name with phased data }
-  \item{ROI}{ \code{numeric}. 2-vector specification passes a chromosome segment to be encoded. 4-vector specification passes the region of interest for the left brake-point (ROI[1] and ROI[2]) and the right brake-point (ROI[3] and ROI[4])  
-}
+  \item{ROI}{ \code{numeric}. 2-vector specification passes a chromosome segment to be encoded. 4-vector specification passes the region of interest for the left brake-point (ROI[1] and ROI[2]) and the right brake-point (ROI[3] and ROI[4])}
+  \item{intSNP}{\code{logical}. whether build flanking blocks of uniform SNP density across the genome.} 
+  \item{phasing}{\code{character}. Either c("ivenrsion&BP","forward", "forward&inverted"), defines the phasing strategy between all four flanking blocks of each break poin. ivenrsion&BP phases the internal flanking block first, then the external blocks to the internal bloks and match them. "forward" uses the blocks in the sequence assumming the forward population; in the inversion model, the backward population is obtained inverting the internal blocks. "forward&inverted" phases the forward and inverted population independently.}
+
 }
 \details{
 When \code{setUpGenodat} is passed, the coding first computes the local haplotypes for each candidate-brake point form the genotype data and then encodes each haplotype into a decimal integer. The local haplotypes are computed with \code{haplo.em} form \code{haplo.stats} and assigns those with highest posterior probability to each chromosome. In the case of phased data, passed through \code{file}, no local haplotyping is needed and only the labeling is performed.

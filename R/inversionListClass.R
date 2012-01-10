@@ -98,8 +98,6 @@ setMethod("getClassif","inversionList",
             {
              id<-paste("sub",1:(nchr/2),sep="")
             }
-
-            id<-rep(id,each=2)
             
          
             RR<-object@results[[wROI]]@RR
@@ -117,6 +115,9 @@ setMethod("getClassif","inversionList",
             if(geno)
             {
             
+              if(bin)
+                 r<-as.numeric(r>0.5)
+ 
               even<-2*(1:(length(r)/2))
               odd<-even-1
               homInv<-r[even]*r[odd]
@@ -131,11 +132,11 @@ setMethod("getClassif","inversionList",
               if(bin)
               { 
                 ans<-as.numeric(r>0.5)
-                names<-rep(id,each=2)
+                names(ans)<-rep(unlist(id),each=2)
                 ans
               }else{
                 ans<-r
-                names<-rep(id,each=2)
+                names(ans)<-rep(unlist(id),each=2)
                 ans
               }
             }

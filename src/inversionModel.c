@@ -231,7 +231,7 @@ void getFreq(double *block, int *nr, int *nlev, double *outlev, double *outfreq)
 
 
 /****/
-void inversionModel(double *dat, int *maxSteps, int *nr, double *outLike, double *outR1)
+void inversionModel(double *datforward, double *datinverted, int *maxSteps, int *nr, double *outLike, double *outR1)
 {
 
    int ncol, row, level, i;
@@ -246,7 +246,7 @@ void inversionModel(double *dat, int *maxSteps, int *nr, double *outLike, double
 
    double blockb1b2[*nr];
 
-   blockAndLev(dat, nr, blockb1b2, col1, col2, nlevb1b2);
+   blockAndLev(datforward, nr, blockb1b2, col1, col2, nlevb1b2);
    
    double levb1b2[*nlevb1b2];
    double nor0[*nlevb1b2];
@@ -261,37 +261,37 @@ void inversionModel(double *dat, int *maxSteps, int *nr, double *outLike, double
 
    double blockb3b4[*nr];
 
-   blockAndLev(dat, nr, blockb3b4, col1, col2, nlevb3b4);
+   blockAndLev(datforward, nr, blockb3b4, col1, col2, nlevb3b4);
    
    double levb3b4[*nlevb3b4];
    double nor1[*nlevb3b4];
    getFreq(blockb3b4, nr, nlevb3b4, levb3b4, nor1);
    /* */
  
-   /* compute block  b1b3, level its haplotypes and get their frequencies*/
-   c1=1; c2=3;   
+   /* compute block  b1b3, level its haplotypes and get their frequencies, or b1b2 of the datainverted*/
+   c1=1; c2=2;   
    int n3=1;
    nlevb1b3=&n3; col1=&c1; col2=&c2;
    *nlevb1b3=n3; *col1=c1; *col2=c2;
 
    double blockb1b3[*nr];
 
-   blockAndLev(dat, nr, blockb1b3, col1, col2, nlevb1b3);
+   blockAndLev(datinverted, nr, blockb1b3, col1, col2, nlevb1b3);
    
    double levb1b3[*nlevb1b3];
    double inv0[*nlevb1b3];
    getFreq(blockb1b3, nr, nlevb1b3, levb1b3, inv0);
    /* */
    
-   /* compute block  b2b4, level its haplotypes and get their frequencies*/
-   c1=2; c2=4;
+   /* compute block  b2b4, level its haplotypes and get their frequencies, or b3b4 of the datainverted*/
+   c1=3; c2=4;
    int n4=1;
    nlevb2b4=&n4; col1=&c1; col2=&c2;
    *nlevb2b4=n4; *col1=c1; *col2=c2;
 
    double blockb2b4[*nr];
 
-   blockAndLev(dat, nr, blockb2b4, col1, col2, nlevb2b4);
+   blockAndLev(datinverted, nr, blockb2b4, col1, col2, nlevb2b4);
    
    double levb2b4[*nlevb2b4];
    double inv1[*nlevb2b4];
@@ -309,7 +309,9 @@ void inversionModel(double *dat, int *maxSteps, int *nr, double *outLike, double
    for (row=0; row<*nr; ++row) 
    LoglikeNor=log((r01[row])*(r11[row]))+LoglikeNor;
       
-   BicNor=-2*LoglikeNor+(*nlevb1b2+*nlevb3b4-2)*log(*nr);
+   BicNor=-2*LoglikeNor+(*nlevb1b2+*nlevb3b4-2)*log(*nr); 
+
+/*BicNor=-2*LoglikeNor+(*nlevb1b2+*nlevb3b4-2)*2; 
    
    /* compute block  b1b2b3b4, level its haplotypes and get their frequencies*/
    c1=1; c2=2;
@@ -454,7 +456,10 @@ void inversionModel(double *dat, int *maxSteps, int *nr, double *outLike, double
    for (row=0; row<*nr; ++row) 
       LoglikeInv=log(r1[row]+r2[row])+LoglikeInv;
       
-   BicInv=-2*LoglikeInv+(*nlevb1b2+*nlevb3b4+*nlevb1b3+*nlevb2b4+1-4)*log(*nr);
+   BicInv=-2*LoglikeInv+(*nlevb1b2+*nlevb3b4+*nlevb1b3+*nlevb2b4+1-4)*log(*nr); 
+
+/*BicInv=-2*LoglikeInv+(*nlevb1b2+*nlevb3b4+*nlevb1b3+*nlevb2b4+1-4)*2;*/
+   
    
    /*log-likelihood*/
    outLike[0]=2.0*(LoglikeInv-LoglikeNor);

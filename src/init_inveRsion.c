@@ -6,11 +6,11 @@
 #include <R_ext/Visibility.h>
 
 
-static R_NativePrimitiveArgType inversionModel_in[5] = {REALSXP, INTSXP, INTSXP, REALSXP, REALSXP};
+static R_NativePrimitiveArgType inversionModel_in[6] = {REALSXP, REALSXP, INTSXP, INTSXP, REALSXP, REALSXP};
 static R_NativePrimitiveArgType writeGenoDat_in[12] = {INTSXP, INTSXP, INTSXP, INTSXP, INTSXP, INTSXP, INTSXP, INTSXP, INTSXP, REALSXP, REALSXP, REALSXP};
 
 R_CMethodDef CEntries[]  = {
-        {"inversionModel", (DL_FUNC) &inversionModel, 5, inversionModel_in},        
+        {"inversionModel", (DL_FUNC) &inversionModel, 6, inversionModel_in},        
         {"writeGenoDat", (DL_FUNC) &writeGenoDat, 12, writeGenoDat_in}, 
         {NULL, NULL, 0}
 };

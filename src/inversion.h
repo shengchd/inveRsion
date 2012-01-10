@@ -8,7 +8,7 @@ void blockAndLev(double *dat, int *nr, double *block, int *col1, int *col2, int 
 void getFreq(double *block, int *nr, int *nlev, double *outlev, double *outfreq);
 
 
-void inversionModel(double *dat, int *maxSteps, int *nr, double *outLike, double *outR1);
+void inversionModel(double *datforward, double *datinverted, int *maxSteps, int *nr, double *outLike, double *outR1);
 void writeGenoDat(int *geno, int *numprobes, int *numsub, int *lev, int *numlev, int *sumallele, int *caco, int *levcaco, int *numlevcaco, double *outInv, double *outAleleSum, double *outNoMissCount);
 
 

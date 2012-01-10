@@ -23,7 +23,8 @@ export(
 "codeHaplo",
 "ROIGenoDat",
 "manual",
-"scanInv"
+"scanInv",
+"invROI"
 )
 importClassesFrom(methods, list, matrix, numeric, vector)
 importMethodsFrom(methods, initialize, show)

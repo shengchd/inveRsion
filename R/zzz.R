@@ -1,10 +1,10 @@
 
-.onLoad <- function(lib, pkg) 
+.onLoad<- function(lib, pkg) 
 {    
-    cat("\n") 
-    cat("Hola!\n") 
-    cat("welcome to inevRsion package. \n \n \n")
-    cat("type: manual() for full manual \n      vignette(\"inveRsion\") for a quick start \n")
+    packageStartupMessage("\n") 
+    packageStartupMessage("Hola!\n") 
+    packageStartupMessage("welcome to inevRsion package. \n \n \n")
+    packageStartupMessage("type: manual() for full manual \n      vignette(\"inveRsion\") for a quick start \n")
 }
 
 

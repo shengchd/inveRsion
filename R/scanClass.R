@@ -18,51 +18,25 @@ function(objectHaploCode,window,maxSteps=30,geno=FALSE,saveRes=TRUE,saveBlocks=T
     if(!is(objectHaploCode,"HaploCode"))
         stop("Error: first argument must be class HaploCode \n") 
   
-    message("  checking previos results")
-    existsb1b2<-dir(getwd(),pattern="b1b2.txt")
-    
-            
-    if(length(existsb1b2)==0)
-    {
-      numBrakePoints<-NCOL(objectHaploCode@haploCode)
-      Coorb1b2<-as.numeric(unlist(sapply(colnames(objectHaploCode@haploCode), strsplit, "-"))) 
-        
-      message("  building blocks b1 b2 around candidate brake-points")
-      message("  Number of brake-points:",numBrakePoints)
-      b1b2<-sapply(1:numBrakePoints,getb1b2,objectHaploCode)
-      b1b2<-matrix(b1b2,ncol=2*NCOL(b1b2),nrow=NROW(b1b2)/2)
-
-      if(saveBlocks)
-      {
-        message("\n saving file b1b2.txt")
-        write.table(b1b2,file="b1b2.txt",row.names=FALSE,col.names=as.character(Coorb1b2),quote=FALSE) 
-      }
-       
-    }else{      
-      message("  file b1b2.txt found: Using previous results.")
-      b1b2<-read.table("b1b2.txt",header=FALSE)
-      b1b2<-as.matrix(b1b2)
+      b1b2<-objectHaploCode@haploCode
                
-      Coorb1b2<-as.vector(unlist(b1b2[1,]))
+      Coorb1b2<-as.numeric(colnames(b1b2))
       numBrakePoints<-NCOL(b1b2)/2
-
-      b1b2<-b1b2[-1,]
-    }
      
-    #set up the model  
-    seqbrakepoints<-2*(1:numBrakePoints)-1
-    leftCoorb1b2<-Coorb1b2[seqbrakepoints]
-    rightCoorb1b2<-Coorb1b2[seqbrakepoints+1]
-    BlockSize<-objectHaploCode@blockSize
-    ls<-attr(objectHaploCode@haploCode,"lociSel")
+      #set up the model  
+      seqbrakepoints<-2*(1:numBrakePoints)-1
+      leftCoorb1b2<-Coorb1b2[seqbrakepoints]
+      rightCoorb1b2<-Coorb1b2[seqbrakepoints+1]
+      BlockSize<-objectHaploCode@blockSize
+      ls<-attr(objectHaploCode@haploCode,"locilim")
 
-    #build b1b2 blocks, use only left brake point limit to ckeck window search  
-    message("-computing inversion model-")
-    invResults<-iterateInversionModel(b1b2,window,BlockSize,ls,maxSteps,geno,leftCoorb1b2,rightCoorb1b2)
+      #build b1b2 blocks, use only left brake point limit to ckeck window search  
+      message("-computing inversion model-")
+      invResults<-iterateInversionModel(b1b2,window,BlockSize,ls,maxSteps,geno,leftCoorb1b2,rightCoorb1b2)
     
-    message("")  
-    message("-computation done-")  
-    scanRes<- new("scan", 
+      message("")  
+      message("-computation done-")  
+      scanRes<- new("scan", 
         leftBP=invResults[[1]],
         rightBP=invResults[[2]],
         leftBP2=invResults[[3]],
@@ -75,10 +49,10 @@ function(objectHaploCode,window,maxSteps=30,geno=FALSE,saveRes=TRUE,saveBlocks=T
         window=window
         )
         
-    if(saveRes)
-      save(scanRes,file="scanRes.RData")
+      if(saveRes)
+        save(scanRes,file="scanRes.RData")
     
-   scanRes 
+      scanRes 
 }
 
 #auxilary functions#
@@ -143,7 +117,9 @@ iterateInversionModel <-function(b1b2,window,BlockSize,ls,maxSteps,geno,Coor,Coo
 {
     if(missing(getInvclass)) 
       getInvclass<-FALSE
-      
+
+    nr<-NROW(b1b2)    
+  
     #look for scan of size window (fixed size)
     if(missing(candidatePoints))
     {
@@ -164,7 +140,8 @@ iterateInversionModel <-function(b1b2,window,BlockSize,ls,maxSteps,geno,Coor,Coo
 
       rightind<-c()
       sel<-(posbrakePoints-posbrakePoints[1])>window
-       
+      nr<-NROW(b1b2);
+
 
       pnt<-1
       while(sum(sel)!=0 & pnt!=int)
@@ -172,39 +149,113 @@ iterateInversionModel <-function(b1b2,window,BlockSize,ls,maxSteps,geno,Coor,Coo
           cat(".")
         rightPnt<-(1:length(posbrakePoints))[sel][1]
         
-        if(((posbrakePoints[rightPnt]-posbrakePoints[pnt])<2*window) & ((ls[rightPnt]-ls[pnt])>2*BlockSize) )
+        if(((posbrakePoints[rightPnt]-posbrakePoints[pnt])<2*window) & (ls[pnt,2]<ls[rightPnt,1]) )
         {            
           dat<-matrix(0,ncol=4,nrow=NROW(b1b2))
           dat[,1:2]<-b1b2[,(2*pnt-1):(2*pnt)]
           dat[,3:4]<-b1b2[,(2*(rightPnt)-1):(2*rightPnt)]
-               
-          #decide whether to flip the haplotypes of block b3b4 for each subject 
+          Nr<-nr+1
+          maxindx<-sum(sapply(0:(BlockSize-1), function(x) 2^x))
+     
+          #finish phasing depending on the strategy in haploCode
           if(geno)
           {
-              dat<-flipGeno(dat,maxSteps)
+              
+              if(attr(b1b2,"phasing")=="forward&inverted" | attr(b1b2,"phasing")=="forward") 
+              {
+                #datFor
+                dat1<-dat[,1]
+                dat2<-dat[,2]
+                indx12<-flipGeno(dat1,dat2,maxSteps)
+
+                dat3<-dat[,3]
+                dat4<-dat[,4]
+                indx34<-flipGeno(dat3,dat4,maxSteps)
+              
+                dat1234<-cbind(dat[,1],dat[indx12,2],dat[,3],dat[indx34,4])
+                indx1234<-flipGeno(cbind(dat[,1],dat[indx12,2]),cbind(dat[,3],dat[indx34,4]),maxSteps)
+
+                Datfor<-cbind(dat1234[,1],dat1234[,2],dat1234[indx1234,3],dat1234[indx1234,4])
+                Datfor<-rbind(rep(maxindx+1,4),Datfor)
+
+                if(attr(b1b2,"phasing")=="forward")
+                { 
+                  Datinv<-Datfor[,c(1,3,2,4)]
+                }else{ 
+
+                 #datInv
+                  dat1<-dat[,1]
+                  dat3<-dat[,3]
+                  indx13<-flipGeno(dat1,dat3,maxSteps)
+
+                  dat2<-dat[,2]
+                  dat4<-dat[,4]
+                  indx24<-flipGeno(dat2,dat4,maxSteps)
+              
+                  dat1324<-cbind(dat[,1],dat[indx13,3],dat[,2],dat[indx24,4])
+                  indx1324<-flipGeno(cbind(dat[,1],dat[indx13,3]),cbind(dat[,2],dat[indx24,4]),maxSteps)
+
+                  Datinv<-cbind(dat1324[,1],dat1324[,2],dat1324[indx1324,3],dat1324[indx1324,4])
+                  Datinv<-rbind(rep(maxindx+1,4),Datinv)
+                }
+              }  
+
+              if(attr(b1b2,"phasing")=="inversion&BP")
+              {
+                #finish phasing
+                #phase inverted region
+                dat2<-dat[,2]
+                dat3<-dat[,3]
+                indx23<-flipGeno(dat2,dat3,maxSteps)
+                dat23<-cbind(dat[,2],dat[indx23,3])
+      
+              #inverted region with left BP
+                dat1<-dat[,1]
+                indx231<-flipGeno(dat23,dat1,maxSteps)               
+
+              #inverted region with right BP
+                dat4<-dat[,4]
+                indx234<-flipGeno(dat23,dat4,maxSteps)
+     
+              #all phased data
+                Datflipped<-cbind(dat[indx231,1],dat23,dat[indx234,4])
+              
+              #add fisrt row as reference
+                Datfor<-rbind(rep(maxindx+1,4),Datflipped)
+                Datinv<-rbind(rep(maxindx+1,4),Datflipped[,c(1,3,2,4)]) 
+             }
+
+          }else{
+          
+              #add fisrt row as reference
+              Datfor<-rbind(rep(maxindx+1,4),dat)
+              Datinv<-rbind(rep(maxindx+1,4),dat[,c(1,3,2,4)])
           }
-  
-          ###call the C routine
-          nr<-NROW(dat);
-        
-          ResInv<-.C("inversionModel",
-                    as.double(unlist(dat)), 
-                    as.integer(maxSteps), 
-                    as.integer(nr),
-                    as.double(rep(0,5)), 
-                    as.double(rep(0,nr)), PACKAGE="inveRsion")
-           
-          if(getInvclass)          
-            R[[pnt]]<-ResInv[[5]]
                    
-          ResInv<-ResInv[[4]]               
+          ResInv<-.C("inversionModel",
+                    as.double(unlist(Datfor)), 
+                    as.double(unlist(Datinv)), 
+                    as.integer(maxSteps), 
+                    as.integer(Nr),
+                    as.double(rep(0,5)), 
+                    as.double(rep(0,Nr)), PACKAGE="inveRsion")
+
+                 
+          if(getInvclass)
+          {          
+             if(ResInv[[6]][1]<0.5)
+                R[[pnt]]<-(ResInv[[6]])[-1]
+              else
+                R[[pnt]]<-(1-ResInv[[6]])[-1]
+          }       
+                                     
+          ResInv<-ResInv[[5]]               
           like[pnt,1]<-ResInv[1]
           prob[pnt,1]<-ResInv[2]
           entInv[pnt,1]<-ResInv[3]
           entTh[pnt,1]<-ResInv[4]
           bic[pnt,1]<-ResInv[5]
-          
-         
+                   
 
         }else{
 
@@ -267,8 +318,8 @@ iterateInversionModel <-function(b1b2,window,BlockSize,ls,maxSteps,geno,Coor,Coo
           for(rgt in intRGT)
           {
                
-              dd<-posbrakePoints[rgt]-posbrakePoints[lft]      
-              if(lft<rgt & dd>window)
+              dd<-posbrakePoints[rgt]-posbrakePoints[lft]            
+              if(lft<rgt & dd>window &(ls[lft,2]<ls[rgt,1]))
                count<-count+1  
           }
       }
@@ -287,37 +338,114 @@ iterateInversionModel <-function(b1b2,window,BlockSize,ls,maxSteps,geno,Coor,Coo
           {
                
               dd<-posbrakePoints[rgt]-posbrakePoints[lft] 
-              SNPdis<-(ls[rgt]-ls[lft])     
-              if( (lft<rgt) & (dd>window) & (SNPdis>2*BlockSize) )
+              if( (lft<rgt) & (dd>window) & (ls[lft,2]<ls[rgt,1]) )
               {  
                  cat(".")
                  dat<-matrix(0,ncol=4,nrow=NROW(b1b2))
                  dat[,1:2]<-b1b2[,(2*lft-1):(2*lft)]
                  dat[,3:4]<-b1b2[,(2*rgt-1):(2*rgt)]
+                 nr<-NROW(dat)
+                 Nr<-nr+1
+                 maxindx<-sum(sapply(0:(BlockSize-1), function(x) 2^x))
+     
+             #finish phasing depending on the strategy in haploCode
+          if(geno)
+          {
+              
+              if(attr(b1b2,"phasing")=="forward&inverted" | attr(b1b2,"phasing")=="forward") 
+              {
+                #datFor
+                dat1<-dat[,1]
+                dat2<-dat[,2]
+                indx12<-flipGeno(dat1,dat2,maxSteps)
 
-                 #decide whether to flip the haplotypes of block b3b4 for each subject 
-                 if(geno)
-                 {
-                   dat<-flipGeno(dat,maxSteps)
-                  }
-                  
-                 ###call the C routine
-                 nr<-NROW(dat);
-                 ResInv<-.C("inversionModel",
-                        as.double(unlist(dat)), 
-                        as.integer(maxSteps), 
-                        as.integer(nr),
-                        as.double(rep(0,5)), 
-                        as.double(rep(0,nr)),PACKAGE="inveRsion")
+                dat3<-dat[,3]
+                dat4<-dat[,4]
+                indx34<-flipGeno(dat3,dat4,maxSteps)
+              
+                dat1234<-cbind(dat[,1],dat[indx12,2],dat[,3],dat[indx34,4])
+                indx1234<-flipGeno(cbind(dat[,1],dat[indx12,2]),cbind(dat[,3],dat[indx34,4]),maxSteps)
 
-                 R[[pnt]]<-ResInv[[5]]
+                Datfor<-cbind(dat1234[,1],dat1234[,2],dat1234[indx1234,3],dat1234[indx1234,4])
+                Datfor<-rbind(rep(maxindx+1,4),Datfor)
+
+                if(attr(b1b2,"phasing")=="forward")
+                { 
+                  Datinv<-Datfor[,c(1,3,2,4)]
+                }else{ 
+
+                 #datInv
+                  dat1<-dat[,1]
+                  dat3<-dat[,3]
+                  indx13<-flipGeno(dat1,dat3,maxSteps)
+
+                  dat2<-dat[,2]
+                  dat4<-dat[,4]
+                  indx24<-flipGeno(dat2,dat4,maxSteps)
+              
+                  dat1324<-cbind(dat[,1],dat[indx13,3],dat[,2],dat[indx24,4])
+                  indx1324<-flipGeno(cbind(dat[,1],dat[indx13,3]),cbind(dat[,2],dat[indx24,4]),maxSteps)
+
+                  Datinv<-cbind(dat1324[,1],dat1324[,2],dat1324[indx1324,3],dat1324[indx1324,4])
+                  Datinv<-rbind(rep(maxindx+1,4),Datinv)
+                }
+              }  
+
+              if(attr(b1b2,"phasing")=="inversion&BP")
+              {
+                #finish phasing
+                #phase inverted region
+                dat2<-dat[,2]
+                dat3<-dat[,3]
+                indx23<-flipGeno(dat2,dat3,maxSteps)
+                dat23<-cbind(dat[,2],dat[indx23,3])
+      
+              #inverted region with left BP
+                dat1<-dat[,1]
+                indx231<-flipGeno(dat23,dat1,maxSteps)               
+
+              #inverted region with right BP
+                dat4<-dat[,4]
+                indx234<-flipGeno(dat23,dat4,maxSteps)
+     
+              #all phased data
+                Datflipped<-cbind(dat[indx231,1],dat23,dat[indx234,4])
+              
+              #add fisrt row as reference
+                Datfor<-rbind(rep(maxindx+1,4),Datflipped)
+                Datinv<-rbind(rep(maxindx+1,4),Datflipped[,c(1,3,2,4)]) 
+             }
+
+          }else{
+          
+              #add fisrt row as reference
+              Datfor<-rbind(rep(maxindx+1,4),dat)
+              Datinv<-rbind(rep(maxindx+1,4),dat[,c(1,3,2,4)])
+          }
+               
                     
-                 ResInv<-ResInv[[4]]
+            ResInv<-.C("inversionModel",
+                    as.double(unlist(Datfor)), 
+                    as.double(unlist(Datinv)), 
+                    as.integer(maxSteps), 
+                    as.integer(Nr),
+                    as.double(rep(0,5)), 
+                    as.double(rep(0,Nr)), PACKAGE="inveRsion")
+
+           
+                 if(ResInv[[6]][1]<0.5)
+                     R[[pnt]]<-(ResInv[[6]])[-1]
+                 else
+                     R[[pnt]]<-(1-ResInv[[6]])[-1]
+                
+                 ResInv<-ResInv[[5]]
                  like[pnt,1]<-ResInv[1]
                  prob[pnt,1]<-ResInv[2]
                  entInv[pnt,1]<-ResInv[3]
                  entTh[pnt,1]<-ResInv[4]
                  bic[pnt,1]<-ResInv[5]
+                 
+               
                  pnt<-pnt+1
                  
                  rightind<-c(rightind,rgt)
@@ -360,32 +488,50 @@ iterateInversionModel <-function(b1b2,window,BlockSize,ls,maxSteps,geno,Coor,Coo
 #local haplotyping leaves unmatched the coupling between b1b2 and b3b4 for the 2 chromosomes of a sinlgle subject. 
 #within iterateInversionModel, run inversion Model for identyfying most probable match of haplotypes corresponding 
 #to left and right brake-points. Fuction call from findInveR setting parameter geno=TRUE
-flipGeno<-function(datOrg,maxSteps)
+flipGeno<-function(datLeft,datRight,maxSteps)
 {
-  s1<-sapply(1:NROW(datOrg),function(x) paste(datOrg[x,1],datOrg[x,2],sep=""))
-  s2<-sapply(1:NROW(datOrg),function(x) paste(datOrg[x,3],datOrg[x,4],sep=""))
+  if(NCOL(datLeft)==2)
+  { 
+    s1<-sapply(1:NROW(datLeft),function(x) paste(datLeft[x,1],datLeft[x,2],sep=""))
+  }else{
+    s1<-datLeft
+  }
 
+  if(NCOL(datRight)==2)
+  { 
+    s2<-sapply(1:NROW(datRight),function(x) paste(datRight[x,1],datRight[x,2],sep=""))
+  }else{
+    s2<-datRight
+  }
+  
+  
   ev<-2*(1:(length(s2)/2))
   odd<-ev-1
 
   #re-cast the inversion model as a chromosome mathcing task
-  datNew<-matrix(ncol=4,nrow=NROW(datOrg)/2)
+  datNew<-matrix(ncol=4,nrow=NROW(s1)/2)
   datNew[,1]<-as.numeric(s1[odd])
   datNew[,2]<-as.numeric(s2[odd])
   datNew[,3]<-as.numeric(s2[ev])
   datNew[,4]<-as.numeric(s1[ev])
 
   nr<-NROW(datNew);
-  prop<-0.5 #dummy parameter
-  runs<-1;
-  inR<-.C("inversionModel",
-                as.double(unlist(datNew)), 
-                as.integer(maxSteps), 
-                as.integer(nr),
-                as.double(rep(0,5)), 
-                as.double(rep(0,nr)),PACKAGE="inveRsion") 
+  
+  Datfor<-datNew
+  Datinv<-datNew[,c(1,3,2,4)]
 
-  R1<-inR[[5]]
+                    
+  inR<-.C("inversionModel",
+              as.double(unlist(Datfor)), 
+              as.double(unlist(Datinv)), 
+              as.integer(maxSteps), 
+              as.integer(nr),
+              as.double(rep(0,5)), 
+              as.double(rep(0,nr)), PACKAGE="inveRsion")
+
+  
+ 
+  R1<-inR[[6]]
    
   ev<-2*(1:nr)
   odd<-ev-1
@@ -396,10 +542,17 @@ flipGeno<-function(datOrg,maxSteps)
   flip<-as.vector(rbind(sel.ev.flip,sel.odd.flip))
   no.flip<-as.vector(rbind(sel.odd.flip,sel.ev.flip))   
    
-  ans<-datOrg
-  ans[no.flip,3:4]<-ans[flip,3:4] 
+  #ansLeft<-1:nr 
+  #ansRight<-1:nr
+
+#  ansRight[no.flip]<-ansRight[flip]
+  
+  ans<-1:NROW(cbind(datLeft,datRight))
+  ans[no.flip]<-ans[flip]
+  
   ans 
 }    
+
 
 
 ##plot scan##
@@ -578,7 +731,6 @@ setMethod("listInv","scan",
          function(object,hapCode,geno,ROI,saveRes,thBic,all,saveROI)
          {
           
-
           if(missing(hapCode)) 
              stop("\n haploCode object from previous results needed\n")
           
@@ -595,7 +747,6 @@ setMethod("listInv","scan",
 
           if(missing(ROI))
              ROI<-getROIs(object,thBic=thBic)
-
 
           if(missing(saveRes))
             saveRes<-TRUE
@@ -672,37 +823,17 @@ setMethod("listInv","scan",
               }
               
               canp<-leftCoorb1b2[ss]
+
+              selh<-rep(ss,each=2)
                  
-              ROIHaplo<-hapCode
-              ROIHaplo@haploCode<-hapCode@haploCode[,ss]
-
-
-              numB<-NCOL(ROIHaplo@haploCode)
-
-              ROIstr<-paste(round(min(LB),2),round(max(RB),2),sep="-")
-              ROIstr<-paste(paste("roi",ROIstr,sep=""),"txt",sep=".")
-
-              existsfile<-dir(getwd(),pattern=ROIstr)
-              if(length(existsfile)==0)
-              {
-                message("extracting b1b2 in ROI with ", numB," brakepoints \n")
-                ROIb1b2<-sapply(1:numB,getb1b2,ROIHaplo)
-                ROIb1b2<-matrix(ROIb1b2,ncol=2*NCOL(ROIb1b2),nrow=NROW(ROIb1b2)/2)
-                
-                if(saveROI)
-                  write.table(ROIb1b2,file=ROIstr,row.names=FALSE,col.names=FALSE)
-                  
-              }else{
-                message("\n")
-                message("  ROI file found")
-                ROIb1b2<-read.table(ROIstr,header=FALSE)
-                ROIb1b2<-as.matrix(ROIb1b2)
-              }
+              ROIb1b2<-hapCode@haploCode[,selh]              
               
-              
+              attr(ROIb1b2,"phasing")<-attr(hapCode@haploCode,"phasing")
+
               BlockSize<-hapCode@blockSize
-              ls<-attr(hapCode@haploCode,"lociSel")
+              ls<-attr(hapCode@haploCode,"locilim")
               
+
               #compute all possible combinations in ROI/dist>window 
               if(all)  
                 invResults<-iterateInversionModel(ROIb1b2,window=object@window,BlockSize=BlockSize,ls=ls,maxSteps=30,geno=geno,Coor=canp,Coor2=canp,candidatePoints=candidatePoints)
@@ -710,7 +841,6 @@ setMethod("listInv","scan",
                 invResults<-iterateInversionModel(ROIb1b2,window=object@window,BlockSize=BlockSize,ls=ls,maxSteps=30,geno=geno,Coor=canp,Coor2=canp,getInvclass=TRUE)
                             
               RR<-invResults[[10]]
-            
                 
               #select only possitive bics
               sb<-invResults[[9]]>thBic
@@ -722,6 +852,9 @@ setMethod("listInv","scan",
               }else{
 
                 int<-(1:length(RR))[sb]
+                  
+                #sort inversion reference with respect to segment of maximum BIC
+
 
                 r1<-sapply(1:length(RR[[1]]), function(y) mean(sapply(int,function(x) RR[[x]][y]<0.5)))              
                   
@@ -757,4 +890,115 @@ setMethod("listInv","scan",
             
 )
 
+
+invROI<-
+function(hapCode,geno,ROI,saveRes,thBic)
+{
+          
+          if(missing(hapCode)) 
+             stop("\n haploCode object from previous results needed\n")
+          
+          if(missing(geno))
+          { 
+             message("\n assuming phased data \n")  
+             geno<-FALSE
+          } 
+          
+
+          if(missing(thBic))
+            thBic<--Inf
+
+
+          if(missing(ROI))
+             stop("\n needs ROI \n")
+        
+
+          if(missing(saveRes))
+            saveRes<-TRUE
+
+        
+          #get previous results  
+          leftCoorb1b2<-as.numeric(colnames(hapCode@haploCode))[2*((1:(NCOL(hapCode@haploCode)/2)))-1]
+                
+          results<-list()
+            
+          #invList<-new("inversionList")                 
+              
+          slb<-leftCoorb1b2>=ROI[1] & leftCoorb1b2<=ROI[2]
+          srb<-leftCoorb1b2>=ROI[3] & leftCoorb1b2<=ROI[4]
+              
+          canLBP<-leftCoorb1b2[slb]
+          canRBP<-leftCoorb1b2[srb]
+
+          candidatePoints<-list(canLBP,canRBP)
+                 
+          ss<-slb | srb
+                        
+          canp<-leftCoorb1b2[ss]
+          
+          selh<-rep(ss,each=2)
+                 
+          ROIb1b2<-hapCode@haploCode[,selh]              
+              
+          BlockSize<-hapCode@blockSize
+          ls<-attr(hapCode@haploCode,"locilim")
+
+           #add first row as refernce
+           maxindx<-sum(sapply(0:(BlockSize-1), function(x) 2^x))
+           datNew<-matrix(ncol=NCOL(ROIb1b2),nrow=(NROW(ROIb1b2)+1))
+           datNew[1,]<-rep(maxindx+1,NCOL(ROIb1b2))
+           datNew[-1,]<-ROIb1b2
+           ROIb1b2<-datNew
+
+              
+          #compute all possible combinations in ROI/dist>window 
+          invResults<-iterateInversionModel(ROIb1b2,window=0,BlockSize=BlockSize,ls=ls,maxSteps=30,geno=geno,Coor=canp,Coor2=canp,candidatePoints=candidatePoints)
+                            
+          RR<-invResults[[10]]
+            
+                
+          #select only possitive bics
+          sb<-invResults[[9]]>thBic
+                               
+          if(length(sb)==0)
+          {    
+             warning("\n no pair of brakepoints selected for the ROI \n")                
+                
+          }else{
+
+                int<-(1:length(RR))[sb]
+
+                 for(ii in int)
+                   if(RR[[ii]][1]<0.5)
+                      RR[[ii]]<-1-RR[[ii]]
+
+                r1<-sapply(1:length(RR[[1]]), function(y) mean(sapply(int,function(x) RR[[x]][y]<0.5)))              
+                  
+                LB<-c(ROI[1],ROI[2])
+                names(LB)<-c("min","max")
+              
+                RB<-c(ROI[3],ROI[4])
+                names(RB)<-c("min","max")
+                             
+                results[[1]]<- new("inversion", 
+              	    classification=r1,
+                    leftBP=invResults[[1]][sb],
+                    rightBP=invResults[[2]][sb],
+                    bic=invResults[[9]][sb],
+                    intLeftBP=LB, 
+                    intRightBP=RB,
+                    invFreq=mean(r1>0.5),
+                    RR=lapply(int, function(x) RR[[x]])
+                    )
+          }
+        
+       
+       invList<-new("inversionList",results=results)
+       
+       if(saveRes)
+         save(invList,file="invList.RData")                         
+          
+       invList              
+}
+            
 
