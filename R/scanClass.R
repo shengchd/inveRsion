@@ -950,6 +950,8 @@ function(hapCode,geno,ROI,saveRes,thBic)
            datNew[-1,]<-ROIb1b2
            ROIb1b2<-datNew
 
+           attr(ROIb1b2,"phasing")<-attr(hapCode@haploCode,"phasing")
+
               
           #compute all possible combinations in ROI/dist>window 
           invResults<-iterateInversionModel(ROIb1b2,window=0,BlockSize=BlockSize,ls=ls,maxSteps=30,geno=geno,Coor=canp,Coor2=canp,candidatePoints=candidatePoints)
