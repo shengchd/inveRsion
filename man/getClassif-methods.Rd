@@ -13,21 +13,20 @@ Classifies into inverted or non-inverted populations each chromosome in the samp
 }}
 
 \usage{
-getClassif(object, thBic, wROI, bin,geno,id)
+getClassif(object, thBic, wROI, bin,geno,id,nmod)
 }
 
 \arguments{
-  \item{object}{\code{inversionList}. List of inversions obtained from a chromosome scan. 
-}
-  \item{thBic}{ \code{numeric}. BIC threshold above which significant segments are chosen for the final classification
-}
+  \item{object}{\code{inversionList}. List of inversions obtained from a chromosome scan. }
+  \item{thBic}{ \code{numeric}. BIC threshold above which significant segments are chosen for the final classification}
   \item{wROI}{\code{numeric}. ROI number from the list to select classification }
   \item{bin}{\code{logic}. Whether binary or continous classification is retrieved}
   \item{geno}{\code{logic}. Whether inversion genotype is retrieved}
   \item{id}{\code{character}. Vector of subject IDs}
+  \item{nmod}{\code{numeric}. number of trial segments to be used in the classification counting from the trial segments with highest BIC downwards.}
 }
 \details{
-The overall classification of chromosomes into inverted and non-inverted populations is given by the majority vote of the classifications obtained for each trial segment in the ROI, with BIC greater than \code{thBic}. 
+The overall classification of chromosomes into inverted and non-inverted populations is given by the weighted average of the classifications obtained for each trial segment in the ROI, with BIC greater than \code{thBic}. 
 }
 \value{
 \code{numeric}. Vector with values between 0 and 1 representing membership to the non-inverted and inverted population respectively.
@@ -47,3 +46,4 @@ head(r)
 }
 
 \keyword{methods}
+
