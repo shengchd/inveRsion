@@ -844,6 +844,7 @@ setMethod("listInv","scan",
                 
               #select only possitive bics
               sb<-invResults[[9]]>thBic
+              sb[is.na(sb)]<-FALSE
               
               if(length(sb)==0)
               {    
@@ -890,5 +891,5 @@ setMethod("listInv","scan",
             
 )
 
-    
+
 

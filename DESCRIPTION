@@ -6,7 +6,7 @@ Date: 2011-05-12
 Author: Alejandro Caceres
 Maintainer: Alejandro Caceres <acaceres@creal.cat>
 Description: Package to find genetic inversions in genotype (SNP array) data.
-License: GPL version 2 or newer
+License: GPL (>= 2)
 LazyLoad: yes
 Depends: methods, haplo.stats
 Imports: graphics, methods, utils

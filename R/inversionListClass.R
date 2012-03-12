@@ -73,11 +73,11 @@ setMethod(f="plot",signature=c(x="inversionList"),
 
 
 #generic functions
-setGeneric("getClassif",function(object,thBic,wROI,bin,geno,id){standardGeneric("getClassif")})
+setGeneric("getClassif",function(object,thBic,wROI,bin,geno,id,nmod){standardGeneric("getClassif")})
 
 
 setMethod("getClassif","inversionList",         
-         function(object,thBic,wROI,bin,geno,id)
+         function(object,thBic,wROI,bin,geno,id,nmod)
          {
 
             if(missing(wROI))
@@ -100,14 +100,29 @@ setMethod("getClassif","inversionList",
             }
             
          
+          
             RR<-object@results[[wROI]]@RR
+            bic<-object@results[[wROI]]@bic
 
-            sb<-object@results[[wROI]]@bic>thBic
+            o1<-order(-bic)
+
+            RR<-RR[o1]
+            bic<-bic[o1]
+
+            sb<-bic>thBic
+
             ii<-(1:length(RR))[sb]
 
-            #for each subject see the average classification given across models
+            lni<-length(ii)
+        
+            if(!missing(nmod))
+               ii<-ii[1:min(nmod,lni)]            
 
-            r<-sapply(1:length(RR[[1]]), function(y) mean(sapply(ii,function(x) RR[[x]][y]<0.5)))
+            nbic<-bic[ii]/mean(bic[ii])
+
+            #for each subject see the average classification given across models
+            r<-sapply(1:length(RR[[1]]), function(y) mean(nbic*sapply(ii,function(x) RR[[x]][y])))
+
            
             message("\n getting mean classification across ", length(ii), " models \n")
 
@@ -189,7 +204,7 @@ setMethod("accBic","inversionList",
             ac<-c()
             prob<-c()
  
-            bicInt<- seq(0,max(object@results[[1]]@bic),length.out=npoints)
+            bicInt<- seq(0,max(object@results[[1]]@bic,na.rm=TRUE),length.out=npoints)
             bicInt<-bicInt[-length(bicInt)]
              message("\n computing accuracy for ", npoints," bic thresholds: ")
 
@@ -197,7 +212,9 @@ setMethod("accBic","inversionList",
             {
                 #select models with bic>thBic
                 cat(".")
-                sb<-object@results[[wROI]]@bic>thBic
+               
+                sb<-object@results[[wROI]]@bic>thBic 
+                sb[is.na(sb)]<-FALSE
                 ii<-(1:length(RR))[sb]
                 
                 #for each subject see the average classification given across models 
