@@ -855,9 +855,10 @@ setMethod("listInv","scan",
                 int<-(1:length(RR))[sb]
                   
                 #sort inversion reference with respect to segment of maximum BIC
+                Bic<-invResults[[9]][sb]
+                nbic<-Bic/mean(Bic)
 
-
-                r1<-sapply(1:length(RR[[1]]), function(y) mean(sapply(int,function(x) RR[[x]][y]<0.5)))              
+                r1<-sapply(1:length(RR[[1]]), function(y) mean(nbic*sapply(int,function(x) RR[[x]][y])))
                   
                 LB<-c(min(LB),max(LB))
                 names(LB)<-c("min","max")
@@ -866,7 +867,7 @@ setMethod("listInv","scan",
                 names(RB)<-c("min","max")
                              
                 results[[numbp]]<- new("inversion", 
-              	    classification=r1,
+              	  classification=r1,
                     leftBP=invResults[[1]][sb],
                     rightBP=invResults[[2]][sb],
                     bic=invResults[[9]][sb],
