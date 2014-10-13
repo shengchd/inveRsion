@@ -1,0 +1,14 @@
+Package: inveRsion
+Type: Package
+Title: Inversions in genotype data
+Version: 1.14.0
+Date: 2011-05-12
+Author: Alejandro Caceres
+Maintainer: Alejandro Caceres <acaceres@creal.cat>
+Description: Package to find genetic inversions in genotype (SNP array) data.
+License: GPL (>= 2)
+LazyLoad: yes
+Depends: methods, haplo.stats
+Imports: graphics, methods, utils
+biocViews: Microarray, SNP
+Packaged: 2012-01-10 13:16:27 UTC; acaceres
