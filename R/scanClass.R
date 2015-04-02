@@ -32,7 +32,7 @@ function(objectHaploCode,window,maxSteps=30,geno=FALSE,saveRes=TRUE,saveBlocks=T
 
       #build b1b2 blocks, use only left brake point limit to ckeck window search  
       message("-computing inversion model-")
-      invResults<-iterateInversionModel(b1b2,window,BlockSize,ls,maxSteps,geno,leftCoorb1b2,rightCoorb1b2)
+      invResults<-iterateInversionModel(b1b2=b1b2,window=window,BlockSize=BlockSize,ls=ls,maxSteps=maxSteps,geno=geno,coor=leftCoorb1b2,coor2=rightCoorb1b2)
     
       message("")  
       message("-computation done-")  
