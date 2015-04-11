@@ -56,8 +56,10 @@ Alejandro Caceres \email{acaceres@creal.cat}
 \examples{
 data(scanRes)
 data(hapCode)
+\donttest{
 invList2<-listInv(scanRes,hapCode=hapCode,geno=FALSE,saveRes=FALSE,all=FALSE,thBic=0, saveROI=FALSE)
 invList2
+}
 }
 
 \keyword{methods}
