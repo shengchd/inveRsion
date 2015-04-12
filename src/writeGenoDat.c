@@ -33,7 +33,7 @@ void writeGenoDat(int *geno, int *numprobes, int *numsub, int *lev, int *numlev,
 {
    int i,j,l,k,dat,nomiss[*numlevcaco],sum[*numlevcaco];
    double allele1sum,allele2sum,invallele;
-   FILE *fg, *fa, *fm;
+   FILE *fg;
 
    fg = fopen("GenoDatTemp.txt","w");
 	

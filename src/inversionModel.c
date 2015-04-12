@@ -164,7 +164,7 @@ void newFreq(double *AA, double *Resp, double *block, double *lev, int *nlev, in
 void blockAndLev(double *dat, int *nr, double *block, int *col1, int *col2, int *nlev)
 {
 
-   int ncol, row, level, found, c1, c2;
+   int row, level, found, c1, c2;
    int levelleft[*nr], levelright[*nr];
    
    *nlev=1;
@@ -234,7 +234,7 @@ void getFreq(double *block, int *nr, int *nlev, double *outlev, double *outfreq)
 void inversionModel(double *datforward, double *datinverted, int *maxSteps, int *nr, double *outLike, double *outR1)
 {
 
-   int ncol, row, level, i;
+   int row, level;
    int *col1, *col2, *nlevb1b2, *nlevb3b4, *nlevb1b3, *nlevb2b4, *nlevb1b2b3b4;
 /*   double BB[(*nr)*(*nr)];*/
   double *BB= (double *)malloc(((*nr)*(*nr))*sizeof(*BB));
@@ -311,7 +311,7 @@ void inversionModel(double *datforward, double *datinverted, int *maxSteps, int 
       
    BicNor=-2*LoglikeNor+(*nlevb1b2+*nlevb3b4-2)*log(*nr); 
 
-/*BicNor=-2*LoglikeNor+(*nlevb1b2+*nlevb3b4-2)*2; 
+/*BicNor=-2*LoglikeNor+(*nlevb1b2+*nlevb3b4-2)*2;  */
    
    /* compute block  b1b2b3b4, level its haplotypes and get their frequencies*/
    c1=1; c2=2;
@@ -452,7 +452,7 @@ void inversionModel(double *datforward, double *datinverted, int *maxSteps, int 
     for (row=0; row<*nr; ++row) 
       r2[row]=(1-prob0)*(r01[row])*(r11[row]);
 
-   double LoglikeInv,BicInv; 
+   double LoglikeInv=0.0,BicInv; 
    for (row=0; row<*nr; ++row) 
       LoglikeInv=log(r1[row]+r2[row])+LoglikeInv;
       
