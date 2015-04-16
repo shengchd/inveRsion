@@ -1,0 +1,14 @@
+inveRsion NEWS
+
+version 1.0.0
+
+  April-2011 released in Bioconductor 2.8
+
+
+version 1.2.1
+
+  getblockLocB12: new internal function that gets the SNPs positions for the flanking blocks with evenly spread SNPs, given by the 0.9995 percentile density across the analyzed chromosome. 
+
+
+version 1.3.1
+  Modification of the local haplotyping procedure. Now local haplotyping is done not across the break point, but only on the blocks at each side...
