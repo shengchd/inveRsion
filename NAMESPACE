@@ -1,0 +1,33 @@
+exportMethods(
+    "accBic",
+    "getClassif",
+    "getInv",
+    "getROIs",
+    "initialize",
+    "listInv",
+    "plot",
+    "show" 
+)
+exportClasses(
+    "accuracy",
+     "GenoDat",
+     "GenoDatROI",
+     "HaploCode",
+     "inversion",
+     "inversionList",
+     "scan" 
+)
+export(
+"setUpGenoDatFile",
+"setUpGenoDatSNPmat",
+"codeHaplo",
+"ROIGenoDat",
+"manual",
+"scanInv"
+)
+importClassesFrom(methods, list, matrix, numeric, vector)
+importMethodsFrom(methods, initialize, show)
+importFrom(graphics, hist, lines, matplot, plot, points)
+importFrom(methods, as, is, new, validObject)
+importFrom(utils, read.table, write.table)
+useDynLib(inveRsion)
